@@ -4,6 +4,7 @@ import com.trainitek.backtothefuture.domain.base.UuidAggregateRoot;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
@@ -26,17 +27,22 @@ public class Enrollment extends UuidAggregateRoot {
     @ManyToOne
     Course course;
 
+    @Getter
     LocalDateTime availableFrom;
 
+    @Getter
     LocalDateTime enrolledAt;
 
+    @Getter
     LocalDateTime startedAt;
 
+    @Getter
     LocalDateTime completedAt;
 
+    @Getter
     LocalDateTime completionValidUntil;
 
-    public static final Period COMPLETION_VALID_DURATION = Period.ofMonths(25);
+    static final Period COMPLETION_VALID_DURATION = Period.ofMonths(25);
 
     @Builder
     private Enrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
@@ -54,10 +60,11 @@ public class Enrollment extends UuidAggregateRoot {
             );
         }
         if (startedAt != null) {
-            throwIfStartDateBeforeAvailableFrom(startedAt);
+            throwIfStartDateIsBeforeAvailableFrom(startedAt);
             this.startedAt = startedAt;
         }
         if (completedAt != null) {
+            throwIfNotStarted();
             throwIfStartDateIsAfterCompletionDate(completedAt);
             this.completedAt = completedAt;
         }
@@ -85,16 +92,30 @@ public class Enrollment extends UuidAggregateRoot {
 
     public void startAt(Clock clock) {
         var startedAt = LocalDateTime.now(clock);
-        throwIfStartDateBeforeAvailableFrom(startedAt);
+        throwIfStartDateIsBeforeAvailableFrom(startedAt);
         this.startedAt = startedAt;
     }
 
-    private void throwIfStartDateBeforeAvailableFrom(LocalDateTime startedAt) {
+    public void completeAt(Clock completedAt) {
+        throwIfNotStarted();
+        LocalDateTime completedAtDateTime = LocalDateTime.now(completedAt);
+        throwIfStartDateIsAfterCompletionDate(completedAtDateTime);
+        this.completedAt = completedAtDateTime;
+        this.completionValidUntil = this.completedAt.plus(COMPLETION_VALID_DURATION);
+    }
+
+    private void throwIfStartDateIsBeforeAvailableFrom(LocalDateTime startedAt) {
         if (startedAt.isBefore(this.availableFrom)) {
             throw new IllegalArgumentException(
                     "Cannot start the enrollment. Current date %s is before available date %s."
                             .formatted(startedAt, this.availableFrom)
             );
+        }
+    }
+
+    private void throwIfNotStarted() {
+        if (!isStarted()) {
+            throw new IllegalArgumentException("Cannot complete an enrollment that hasn't started.");
         }
     }
 
@@ -105,16 +126,6 @@ public class Enrollment extends UuidAggregateRoot {
                             .formatted(this.startedAt, completedAt)
             );
         }
-    }
-
-    public void completeAt(Clock completedAt) {
-        if (!isStarted()) {
-            throw new IllegalArgumentException("Cannot complete an enrollment that hasn't started.");
-        }
-        LocalDateTime completedAtDateTime = LocalDateTime.now(completedAt);
-        throwIfStartDateIsAfterCompletionDate(completedAtDateTime);
-        this.completedAt = completedAtDateTime;
-        this.completionValidUntil = this.completedAt.plus(COMPLETION_VALID_DURATION);
     }
 
     public boolean isStarted() {

@@ -5,7 +5,6 @@ import com.trainitek.backtothefuture.test.support.UnitClockSupport
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -37,7 +36,8 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
 
         then:
-        thrown(IllegalArgumentException)
+        def e = thrown(IllegalArgumentException)
+        e.message == "Enrolled date ${enrolledAt} should be before available date ${availableFrom}."
 
         where:
         enrolledAt      | availableFrom
@@ -84,7 +84,9 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         enrollment.startAt(clock)
 
         then:
-        thrown(IllegalArgumentException)
+        def e = thrown(IllegalArgumentException)
+        def expectedStartedAt = LocalDateTime.now(clock)
+        e.message == "Cannot start the enrollment. Current date ${expectedStartedAt} is before available date ${availableFrom}."
     }
 
     def "Started enrollment can completed"() {
@@ -129,7 +131,10 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         enrollment.completeAt(clock)
 
         then:
-        thrown(IllegalArgumentException)
+        def e = thrown(IllegalArgumentException)
+        def expectedCompletedAt = LocalDateTime.now(clock)
+        e.message == "Cannot complete the enrollment. Started at date ${startedAt} is after current date " +
+                "(completion date) ${expectedCompletedAt}."
     }
 
     def "Enrollment can be created, started and then completed during a longer period"() {
@@ -138,12 +143,16 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def availableFrom = enrolledAt.plusDays(14)
         def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
 
-        when:
+        when: 'time passes'
         adjustClock { it + ofDays(30) }
+
+        and: 'enrollment is started'
         enrollment.startAt(clock)
 
-        and:
+        and: 'some more time time passes'
         adjustClock { it + ofDays(7) }
+
+        and: 'enrollment is completed'
         enrollment.completeAt(clock)
 
         then:
