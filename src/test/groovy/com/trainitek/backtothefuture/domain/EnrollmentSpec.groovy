@@ -5,8 +5,7 @@ import com.trainitek.backtothefuture.test.support.UnitClockSupport
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.Instant
 
 import static java.time.Duration.ofDays
 
@@ -25,9 +24,9 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
         where:
         enrolledAt      | availableFrom
-        localDateTime() | enrolledAt
-        localDateTime() | enrolledAt.plusDays(1)
-        localDateTime() | enrolledAt.plusDays(30)
+        instant() | enrolledAt
+        instant() | enrolledAt + ofDays(1)
+        instant() | enrolledAt + ofDays(30)
     }
 
     @Unroll
@@ -41,13 +40,13 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
         where:
         enrolledAt      | availableFrom
-        localDateTime() | enrolledAt.minusDays(1)
-        localDateTime() | enrolledAt.minusMonths(1)
+        instant() | enrolledAt - ofDays(1)
+        instant() | enrolledAt - ofDays(1)
     }
 
     def "Enrollment initially isn't started"() {
         given:
-        def enrolledAt = localDateTime()
+        def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
 
         when:
@@ -59,7 +58,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
     def "Enrollment can be started"() {
         given:
-        def enrolledAt = localDateTime() // using our trait (MutableClock)
+        def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
         Enrollment enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
 
@@ -71,11 +70,10 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         enrollment.isStarted()
     }
 
-
     @Unroll
     def "Enrollment should not start if started too early"() {
         given:
-        def enrolledAt = localDateTime()
+        def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
         def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
 
@@ -85,13 +83,13 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
         then:
         def e = thrown(IllegalArgumentException)
-        def expectedStartedAt = LocalDateTime.now(clock)
+        def expectedStartedAt = Instant.now(clock)
         e.message == "Cannot start the enrollment. Current date ${expectedStartedAt} is before available date ${availableFrom}."
     }
 
     def "Started enrollment can completed"() {
         given:
-        def enrolledAt = localDateTime()
+        def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
         def startedAt = availableFrom
         def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom,
@@ -102,12 +100,29 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
         then:
         enrollment.isCompleted()
-        enrollment.completionValidUntil == enrollment.completedAt + Enrollment.COMPLETION_VALID_DURATION
+    }
+
+    def "When enrollment is completed it receives valid until date"() {
+        given:
+        def enrolledAt = Instant.now(clock)
+        def availableFrom = enrolledAt
+        def startedAt = availableFrom
+        def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom,
+            startedAt)
+        def zone = clock.getZone()
+        def expectedValidUntilDate = clock.instant().atZone(zone)
+                .plusMonths(Enrollment.COMPLETION_VALID_DURATION).toInstant()
+
+        when:
+        enrollment.completeAt(clock)
+
+        then:
+        enrollment.completionValidUntil.atZone(clock.zone).toInstant() == expectedValidUntilDate
     }
 
     def "Enrollment should complete only if it has started"() {
         given:
-        def enrolledAt = localDateTime()
+        def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
         def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
 
@@ -120,7 +135,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
     def "Started enrollment can't be completed if time was tampered with"() {
         given:
-        def enrolledAt = localDateTime()
+        def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
         def startedAt = availableFrom
         def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom,
@@ -132,15 +147,15 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
         then:
         def e = thrown(IllegalArgumentException)
-        def expectedCompletedAt = LocalDateTime.now(clock)
+        def expectedCompletedAt = Instant.now(clock)
         e.message == "Cannot complete the enrollment. Started at date ${startedAt} is after current date " +
                 "(completion date) ${expectedCompletedAt}."
     }
 
     def "Enrollment can be created, started and then completed during a longer period"() {
         given:
-        def enrolledAt = LocalDateTime.now(clock)
-        def availableFrom = enrolledAt.plusDays(14)
+        def enrolledAt = Instant.now(clock)
+        def availableFrom = enrolledAt + ofDays(14)
         def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
 
         when: 'time passes'
@@ -156,10 +171,12 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         enrollment.completeAt(clock)
 
         then:
-        LocalDate.from(enrollment.startedAt) == LocalDate.from(enrolledAt.plusDays(30))
-        LocalDate.from(enrollment.completedAt) == LocalDate.from(enrolledAt.plusDays(30 + 7))
-        LocalDate.from(enrollment.completionValidUntil) ==
-                LocalDate.from(enrolledAt.plusDays(30 + 7) + Enrollment.COMPLETION_VALID_DURATION)
+        enrollment.startedAt == enrolledAt + ofDays(30)
+        enrollment.completedAt == enrolledAt + ofDays(30 + 7)
+        def expectedValidUntilDate = (enrolledAt + ofDays(30 + 7))
+                .atZone(clock.zone)
+                .plusMonths(Enrollment.COMPLETION_VALID_DURATION)
+                .toInstant()
+        enrollment.completionValidUntil == expectedValidUntilDate
     }
-
 }

@@ -8,9 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.Period;
+import java.time.*;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -28,26 +26,26 @@ public class Enrollment extends UuidAggregateRoot {
     Course course;
 
     @Getter
-    LocalDateTime availableFrom;
+    Instant availableFrom;
 
     @Getter
-    LocalDateTime enrolledAt;
+    Instant enrolledAt;
 
     @Getter
-    LocalDateTime startedAt;
+    Instant startedAt;
 
     @Getter
-    LocalDateTime completedAt;
+    Instant completedAt;
 
     @Getter
-    LocalDateTime completionValidUntil;
+    Instant completionValidUntil;
 
-    static final Period COMPLETION_VALID_DURATION = Period.ofMonths(25);
+    static final int COMPLETION_VALID_DURATION = 24;
 
     @Builder
     private Enrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
-                       @NonNull LocalDateTime enrolledAt, @NonNull LocalDateTime availableFrom,
-                       LocalDateTime startedAt, LocalDateTime completedAt) {
+                       @NonNull Instant enrolledAt, @NonNull Instant availableFrom,
+                       Instant startedAt, Instant completedAt) {
         this.student = student;
         this.enroller = enroller;
         this.course = course;
@@ -71,40 +69,48 @@ public class Enrollment extends UuidAggregateRoot {
     }
 
     public static Enrollment initialEnrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
-                                               @NonNull LocalDateTime enrolledAt,
-                                               @NonNull LocalDateTime availableFrom) {
+                                               @NonNull Instant enrolledAt,
+                                               @NonNull Instant availableFrom) {
         return new Enrollment(student, enroller, course, enrolledAt, availableFrom, null, null);
     }
 
     public static Enrollment startedEnrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
-                                               @NonNull LocalDateTime enrolledAt, @NonNull LocalDateTime availableFrom,
-                                               @NonNull LocalDateTime startedAt) {
+                                               @NonNull Instant enrolledAt, @NonNull Instant availableFrom,
+                                               @NonNull Instant startedAt) {
         return new Enrollment(student, enroller, course, enrolledAt, availableFrom, startedAt, null);
     }
 
     public static Enrollment completedEnrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
-                                                 @NonNull LocalDateTime enrolledAt,
-                                                 @NonNull LocalDateTime availableFrom,
-                                                 @NonNull LocalDateTime startedAt,
-                                                 @NonNull LocalDateTime completedAt) {
+                                                 @NonNull Instant enrolledAt,
+                                                 @NonNull Instant availableFrom,
+                                                 @NonNull Instant startedAt,
+                                                 @NonNull Instant completedAt) {
         return new Enrollment(student, enroller, course, enrolledAt, availableFrom, startedAt, completedAt);
     }
 
     public void startAt(Clock clock) {
-        var startedAt = LocalDateTime.now(clock);
+        var startedAt = Instant.now(clock);
         throwIfStartDateIsBeforeAvailableFrom(startedAt);
         this.startedAt = startedAt;
     }
 
     public void completeAt(Clock completedAt) {
         throwIfNotStarted();
-        LocalDateTime completedAtDateTime = LocalDateTime.now(completedAt);
+        Instant completedAtDateTime = Instant.now(completedAt);
         throwIfStartDateIsAfterCompletionDate(completedAtDateTime);
         this.completedAt = completedAtDateTime;
-        this.completionValidUntil = this.completedAt.plus(COMPLETION_VALID_DURATION);
+        this.completionValidUntil = calculateValidUntilDate(completedAt);
     }
 
-    private void throwIfStartDateIsBeforeAvailableFrom(LocalDateTime startedAt) {
+    private Instant calculateValidUntilDate(Clock completedAt) {
+        ZoneId zone = completedAt.getZone();
+        return completedAt.instant()
+                .atZone(zone)
+                .plusMonths(COMPLETION_VALID_DURATION)
+                .toInstant();
+    }
+
+    private void throwIfStartDateIsBeforeAvailableFrom(Instant startedAt) {
         if (startedAt.isBefore(this.availableFrom)) {
             throw new IllegalArgumentException(
                     "Cannot start the enrollment. Current date %s is before available date %s."
@@ -119,7 +125,7 @@ public class Enrollment extends UuidAggregateRoot {
         }
     }
 
-    private void throwIfStartDateIsAfterCompletionDate(LocalDateTime completedAt) {
+    private void throwIfStartDateIsAfterCompletionDate(Instant completedAt) {
         if (this.startedAt.isAfter(completedAt)) {
             throw new IllegalArgumentException(
                     "Cannot complete the enrollment. Started at date %s is after current date (completion date) %s."

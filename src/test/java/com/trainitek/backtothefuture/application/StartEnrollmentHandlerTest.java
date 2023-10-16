@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import spock.util.time.MutableClock;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+
+import static java.time.Duration.ofDays;
 
 @SpringBootTest
 class StartEnrollmentHandlerTest {
@@ -37,7 +39,7 @@ class StartEnrollmentHandlerTest {
         Course course = Fixtures.someCourse();
         courseRepository.save(course);
 
-        LocalDateTime today = LocalDateTime.now(clock).minusDays(1);
+        Instant today = Instant.now(clock).minus(ofDays(1));
         Enrollment enrollment = Enrollment.builder()
                 .student(student)
                 .course(course)
@@ -48,11 +50,10 @@ class StartEnrollmentHandlerTest {
         enrollmentRepository.save(enrollment);
 
         // when
-        handler.startEnrollment(enrollment.getId());
+        handler.start(enrollment.getId());
 
         // then
         Assertions.assertThat(enrollmentRepository.findById(enrollment.getId())).
                 hasValueSatisfying(Enrollment::isStarted);
     }
-
 }

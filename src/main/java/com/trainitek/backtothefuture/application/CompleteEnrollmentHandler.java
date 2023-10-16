@@ -11,19 +11,19 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class StartEnrollmentHandler {
+public class CompleteEnrollmentHandler {
     private final EnrollmentRepository repository;
     private final Clock clock;
 
-    public StartEnrollmentHandler(EnrollmentRepository repository, Clock clock) {
+    public CompleteEnrollmentHandler(EnrollmentRepository repository, Clock clock) {
         this.repository = repository;
         this.clock = clock;
     }
 
-    public void start(@NonNull UUID enrollmentId) {
+    public void complete(@NonNull UUID enrollmentId) {
         Enrollment enrollment = repository.findById(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment id=%s not found".formatted(enrollmentId)));
-        enrollment.startAt(clock);
+        enrollment.completeAt(clock);
         repository.save(enrollment);
     }
 }
