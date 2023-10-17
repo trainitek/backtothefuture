@@ -19,19 +19,19 @@ class BackToTheFutureIntegrationSpec extends Specification implements Integratio
     def "Back to the Future"() {
         when:
         setClockTo(midnightOf(LocalDate.of(1985, 10, 26)))
-        bean.println("Marty travels to 1955")
+        bean.log("Marty travels to 1955")
 
         setClockTo(midnightOf(LocalDate.of(1955, 11, 5)))
-        bean.println("Marty meets young Doc") // Explanation
+        bean.log("Marty meets young Doc") // Explanation
 
         setClockTo(midnightOf(LocalDate.of(1955, 11, 12)))
-        bean.println("Marty saves his parents") // Explanation
+        bean.log("Marty saves his parents") // Explanation
 
         setClockTo(midnightOf(LocalDate.of(2015, 10, 21)))
-        bean.println("Marty and Doc arrive")
+        bean.log("Marty and Doc arrive")
 
         setClockTo(midnightOf(LocalDate.of(1885, 1, 1)))
-        bean.println("Marty rescues Doc")
+        bean.log("Marty rescues Doc")
 
         then:
         localDate() == LocalDate.of(1885, 1, 1)

@@ -1,29 +1,20 @@
 package com.trainitek.backtothefuture.config.clocks;
 
+import lombok.NonNull;
+
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.TemporalAmount;
 
 public class OurMutableClock extends Clock {
-    private Instant currentInstant;
-    private final ZoneId zone;
 
-    private OurMutableClock(Instant initialInstant, ZoneId zone) {
-        this.currentInstant = initialInstant;
+    private Instant instant;
+    private ZoneId zone;
+
+    public OurMutableClock(@NonNull Instant instant, @NonNull ZoneId zone) {
+        this.instant = instant;
         this.zone = zone;
-    }
-
-    public static OurMutableClock now(ZoneId zone) {
-        return new OurMutableClock(Instant.now(), zone);
-    }
-
-    public static OurMutableClock nowUTC() {
-        return now(ZoneId.of("UTC"));
-    }
-
-    public static OurMutableClock systemDefaultZone() {
-        return now(ZoneId.systemDefault());
     }
 
     @Override
@@ -32,36 +23,24 @@ public class OurMutableClock extends Clock {
     }
 
     @Override
-    public Clock withZone(ZoneId zone) {
-        return new OurMutableClock(currentInstant, zone);
+    public Clock withZone(@NonNull ZoneId zone) {
+        return new OurMutableClock(instant, zone);
     }
 
     @Override
     public Instant instant() {
-        return currentInstant;
+        return instant;
     }
 
-    public void adjustTo(Instant newInstant) {
-        this.currentInstant = newInstant;
+    public void setClockTo(@NonNull Instant instant) {
+        this.instant = instant;
     }
 
-    public void moveTo(Instant newInstant) {
-        adjustTo(newInstant);
+    public void moveIntoFutureBy(@NonNull TemporalAmount temporalAmount) {
+        setClockTo(instant().plus(temporalAmount));
     }
 
-    public void jumpToFutureBy(Duration duration) {
-        this.currentInstant = this.currentInstant.plus(duration);
-    }
-
-    public void jumpToPastBy(Duration duration) {
-        this.currentInstant = this.currentInstant.minus(duration);
-    }
-
-    public void moveForwardBy(Duration duration) {
-        jumpToFutureBy(duration);
-    }
-
-    public void moveBackBy(Duration duration) {
-        jumpToPastBy(duration);
+    public void moveIntoPastBy(@NonNull TemporalAmount temporalAmount) {
+        setClockTo(instant().minus(temporalAmount));
     }
 }

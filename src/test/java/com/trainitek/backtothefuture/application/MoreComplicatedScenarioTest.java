@@ -58,10 +58,13 @@ class MoreComplicatedScenarioTest {
         assertThatThrownBy( () ->
             startEnrollmentHandler.start(enrollment.getId()))
                 .hasMessageContaining("Cannot start the enrollment");
+
         // move into the future
         moveIntoFutureByDays(2);
+
         // and start
         startEnrollmentHandler.start(enrollment.getId());
+
         // and verify that it's started
         assertThat(enrollmentRepository.findById(enrollment.getId())).
                 hasValueSatisfying(Enrollment::isStarted);
