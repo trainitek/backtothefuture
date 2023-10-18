@@ -71,7 +71,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
     }
 
     @Unroll
-    def "Enrollment should not start if started too early"() {
+    def "Enrollment cannot be started too early"() {
         given:
         def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
@@ -87,7 +87,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         e.message == "Cannot start the enrollment. Current date ${expectedStartedAt} is before available date ${availableFrom}."
     }
 
-    def "Started enrollment can completed"() {
+    def "Started enrollment can be completed"() {
         given:
         def enrolledAt = Instant.now(clock)
         def availableFrom = enrolledAt
