@@ -52,9 +52,9 @@ class StartEnrollmentHandlerWithCleanUpTest {
     @Test
     void shouldNotAllowToStartEnrollmentTooEarly() {
         // given
-        Instant enrolledAt = Instant.now(clock);
-        Instant availableFrom = enrolledAt.plus(ofDays(1));
-        Enrollment enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
+        var enrolledAt = Instant.now(clock);
+        var availableFrom = enrolledAt.plus(ofDays(1));
+        var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
 
         // when
@@ -69,9 +69,9 @@ class StartEnrollmentHandlerWithCleanUpTest {
     @Test
     void shouldCreateASimpleEnrollmentAndStartIt() {
         // given
-        Instant enrolledAt = Instant.now(clock);
-        Instant availableFrom = enrolledAt.plus(ofDays(1));
-        Enrollment enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
+        var enrolledAt = Instant.now(clock);
+        var availableFrom = enrolledAt.plus(ofDays(1));
+        var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
 
         // when

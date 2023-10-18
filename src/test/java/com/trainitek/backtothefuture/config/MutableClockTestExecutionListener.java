@@ -14,7 +14,7 @@ public class MutableClockTestExecutionListener extends AbstractTestExecutionList
     @Override
     public void beforeTestMethod(TestContext testContext) {
         // Retrieve the MutableClock bean from the Spring context
-        MutableClock mutableClock = testContext.getApplicationContext().getBean(MutableClock.class);
+        var mutableClock = testContext.getApplicationContext().getBean(MutableClock.class);
 
         // Set the MutableClock to the current system instant
         mutableClock.setInstant(Clock.systemDefaultZone().instant());

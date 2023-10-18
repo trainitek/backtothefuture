@@ -49,9 +49,9 @@ class MoreComplicatedScenarioTest {
     @Test
     void shouldCreateASimpleEnrollmentAndStartIt() {
         // given an initial enrollment available from Tomorrow
-        Instant today = Instant.now(clock);
-        Instant tomorrow = today.plus(ofDays(1));
-        Enrollment enrollment = Enrollment.initialEnrollment(student, student, course, today, tomorrow);
+        var today = Instant.now(clock);
+        var tomorrow = today.plus(ofDays(1));
+        var enrollment = Enrollment.initialEnrollment(student, student, course, today, tomorrow);
         enrollmentRepository.save(enrollment);
 
         // when

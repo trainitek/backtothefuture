@@ -10,7 +10,6 @@ import lombok.NonNull;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -98,14 +97,14 @@ public class Enrollment extends UuidAggregateRoot {
 
     public void completeAt(Clock completedAt) {
         throwIfNotStarted();
-        Instant completedAtDateTime = Instant.now(completedAt);
+        var completedAtDateTime = Instant.now(completedAt);
         throwIfStartDateIsAfterCompletionDate(completedAtDateTime);
         this.completedAt = completedAtDateTime;
         this.completionValidUntil = calculateValidUntilDate(completedAt);
     }
 
     private Instant calculateValidUntilDate(Clock completedAt) {
-        ZoneId zone = completedAt.getZone();
+        var zone = completedAt.getZone();
         return completedAt.instant()
                 .atZone(zone)
                 .plusMonths(COMPLETION_VALID_DURATION)

@@ -1,6 +1,5 @@
 package com.trainitek.backtothefuture.application;
 
-import com.trainitek.backtothefuture.domain.Enrollment;
 import com.trainitek.backtothefuture.domain.EnrollmentRepository;
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ public class StartEnrollmentHandler {
     }
 
     public void start(@NonNull UUID enrollmentId) {
-        Enrollment enrollment = repository.findById(enrollmentId)
+        var enrollment = repository.findById(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment id=%s not found".formatted(enrollmentId)));
         enrollment.startAt(clock);
         repository.save(enrollment);
