@@ -55,30 +55,27 @@ class MoreComplicatedScenarioTest {
         enrollmentRepository.save(enrollment);
 
         // when
-        assertThatThrownBy( () ->
-            startEnrollmentHandler.start(enrollment.getId()))
+        assertThatThrownBy(() -> startEnrollmentHandler.start(enrollment.getId()))
                 .hasMessageContaining("Cannot start the enrollment");
 
         // move into the future
-        moveIntoFutureByDays(2);
+        moveToFutureByDays(2);
 
         // and start
         startEnrollmentHandler.start(enrollment.getId());
 
         // and verify that it's started
-        assertThat(enrollmentRepository.findById(enrollment.getId())).
-                hasValueSatisfying(Enrollment::isStarted);
+        assertThat(enrollmentRepository.findById(enrollment.getId())).hasValueSatisfying(Enrollment::isStarted);
 
         // move back in time
-        moveIntoPastByDays(2);
+        moveToPastByDays(2);
 
         // check if you can complete it
-        assertThatThrownBy(() ->
-                completeEnrollmentHandler.complete(enrollment.getId()))
+        assertThatThrownBy(() -> completeEnrollmentHandler.complete(enrollment.getId()))
                 .hasMessageContaining("Cannot complete the enrollment");
 
         // then
-        moveIntoFutureByDays(3);
+        moveToFutureByDays(3);
         completeEnrollmentHandler.complete(enrollment.getId());
 
         // then
@@ -86,11 +83,11 @@ class MoreComplicatedScenarioTest {
                 hasValueSatisfying(Enrollment::isCompleted);
     }
 
-    private void moveIntoFutureByDays(int days) {
+    private void moveToFutureByDays(int days) {
         clock.setInstant(Instant.now(clock).plus(ofDays(days)));
     }
 
-    private void moveIntoPastByDays(int days) {
+    private void moveToPastByDays(int days) {
         clock.setInstant(Instant.now(clock).minus(ofDays(days)));
     }
 }

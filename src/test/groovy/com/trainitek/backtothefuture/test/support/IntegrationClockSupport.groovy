@@ -14,19 +14,23 @@ trait IntegrationClockSupport {
 
     /**
      * Example: adjustClock { it + ofHours(30) }
-    */
+     */
     MutableClock adjustClock(Closure<MutableClock> adjuster) {
         adjuster(clock)
     }
+
     MutableClock setClockTo(Instant instant) {
         clock.setInstant(instant)
         clock
     }
+
     LocalDateTime localDateTime() { LocalDateTime.now(clock) }
+
     LocalDate localDate() { LocalDate.now(clock) }
+
     Instant instant() { Instant.now(clock) }
 
-    def cleanup() {
+    def setup() {
         // reset the Clock after each test
         // in a real project we could create a Spring TestExecutionListener in order to do that
         clock.setInstant(Instant.now().atZone(ZoneId.of("UTC")).toInstant())

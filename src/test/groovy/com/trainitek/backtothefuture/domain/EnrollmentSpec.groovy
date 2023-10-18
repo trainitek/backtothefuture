@@ -23,10 +23,10 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         noExceptionThrown()
 
         where:
-        enrolledAt      | availableFrom
-        instant() | enrolledAt
-        instant() | enrolledAt + ofDays(1)
-        instant() | enrolledAt + ofDays(30)
+        enrolledAt | availableFrom
+        instant()  | enrolledAt
+        instant()  | enrolledAt + ofDays(1)
+        instant()  | enrolledAt + ofDays(30)
     }
 
     @Unroll
@@ -39,9 +39,9 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         e.message == "Enrolled date ${enrolledAt} should be before available date ${availableFrom}."
 
         where:
-        enrolledAt      | availableFrom
-        instant() | enrolledAt - ofDays(1)
-        instant() | enrolledAt - ofDays(1)
+        enrolledAt | availableFrom
+        instant()  | enrolledAt - ofDays(1)
+        instant()  | enrolledAt - ofDays(1)
     }
 
     def "Enrollment initially isn't started"() {
@@ -93,7 +93,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def availableFrom = enrolledAt
         def startedAt = availableFrom
         def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom,
-            startedAt)
+                startedAt)
 
         when:
         enrollment.completeAt(clock)
@@ -108,7 +108,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def availableFrom = enrolledAt
         def startedAt = availableFrom
         def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom,
-            startedAt)
+                startedAt)
         def zone = clock.getZone()
         def expectedValidUntilDate = clock.instant().atZone(zone)
                 .plusMonths(Enrollment.COMPLETION_VALID_DURATION).toInstant()
@@ -139,7 +139,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def availableFrom = enrolledAt
         def startedAt = availableFrom
         def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom,
-            startedAt)
+                startedAt)
 
         when:
         adjustClock { it - ofDays(1) }
