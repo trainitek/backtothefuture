@@ -49,8 +49,9 @@ class MoreComplicatedScenarioTest {
     @Test
     void shouldCreateASimpleEnrollmentAndStartIt() {
         // given an initial enrollment available from Tomorrow
-        var today = Instant.now(clock);
-        var tomorrow = today.plus(ofDays(1));
+        var today = date("2023-09-11");
+        clock.setInstant(today);
+        var tomorrow = date("2023-09-12");
         var enrollment = Enrollment.initialEnrollment(student, student, course, today, tomorrow);
         enrollmentRepository.save(enrollment);
 
@@ -98,5 +99,9 @@ class MoreComplicatedScenarioTest {
 
     private void moveToPastByDays(int days) {
         clock.setInstant(Instant.now(clock).minus(ofDays(days)));
+    }
+
+    Instant date(String dateString) {
+        return Instant.parse(dateString + "T00:10:00Z");
     }
 }

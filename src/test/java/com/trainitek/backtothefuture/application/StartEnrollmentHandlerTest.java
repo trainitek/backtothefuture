@@ -52,7 +52,8 @@ class StartEnrollmentHandlerTest {
     @Test
     void shouldNotAllowToStartEnrollmentTooEarly() {
         // given
-        var enrolledAt = Instant.now(clock);
+        var enrolledAt = date("2023-09-10");
+        clock.setInstant(enrolledAt);
         var availableFrom = enrolledAt.plus(ofDays(1));
         var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
@@ -65,7 +66,8 @@ class StartEnrollmentHandlerTest {
     @Test
     void shouldCreateASimpleEnrollmentAndStartIt() {
         // given
-        var enrolledAt = Instant.now(clock);
+        var enrolledAt = date("2023-09-11");
+        clock.setInstant(enrolledAt);
         var availableFrom = enrolledAt.plus(ofDays(1));
         var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
@@ -81,5 +83,9 @@ class StartEnrollmentHandlerTest {
 
     private void moveToFutureBy(Duration amount) {
         clock.adjust(adjuster -> adjuster.plus(amount));
+    }
+
+    Instant date(String dateString) {
+        return Instant.parse(dateString + "T00:10:00Z");
     }
 }
