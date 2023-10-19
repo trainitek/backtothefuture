@@ -1,11 +1,13 @@
 package com.trainitek.backtothefuture.application;
 
+import com.trainitek.backtothefuture.config.MutableClockTestExecutionListener;
 import com.trainitek.backtothefuture.domain.*;
 import com.trainitek.backtothefuture.test.fixtures.Fixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestExecutionListeners;
 import spock.util.time.MutableClock;
 
 import java.time.Duration;
@@ -16,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
+@TestExecutionListeners(mergeMode =
+        TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS, listeners = MutableClockTestExecutionListener.class)
 class StartEnrollmentHandlerTest {
 
     @Autowired
@@ -53,13 +57,9 @@ class StartEnrollmentHandlerTest {
         var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
 
-        // when
+        // when & then
         assertThatThrownBy(() -> handler.start(enrollment.getId()))
                 .hasMessageContaining("Cannot start the enrollment");
-
-        // then
-        assertThat(enrollmentRepository.findById(enrollment.getId()))
-                .hasValueSatisfying(Enrollment::isStarted);
     }
 
     @Test
@@ -76,7 +76,7 @@ class StartEnrollmentHandlerTest {
 
         // then
         assertThat(enrollmentRepository.findById(enrollment.getId()))
-                .hasValueSatisfying(Enrollment::isStarted);
+                .hasValueSatisfying(e -> assertThat(e.isStarted()).isTrue());
     }
 
     private void moveToFutureBy(Duration amount) {

@@ -65,7 +65,7 @@ class MoreComplicatedScenarioTest {
         startEnrollmentHandler.start(enrollment.getId());
 
         // and verify that it's started
-        assertThat(enrollmentRepository.findById(enrollment.getId())).hasValueSatisfying(Enrollment::isStarted);
+        assertEnrollmentIsStarted(enrollment);
 
         // move back in time
         moveToPastByDays(2);
@@ -79,8 +79,17 @@ class MoreComplicatedScenarioTest {
         completeEnrollmentHandler.complete(enrollment.getId());
 
         // then
+        assertThatEnrollmentIsCompleted(enrollment);
+    }
+
+    private void assertThatEnrollmentIsCompleted(Enrollment enrollment) {
         assertThat(enrollmentRepository.findById(enrollment.getId())).
-                hasValueSatisfying(Enrollment::isCompleted);
+                hasValueSatisfying(e -> assertThat(e.isCompleted()).isTrue());
+    }
+
+    private void assertEnrollmentIsStarted(Enrollment enrollment) {
+        assertThat(enrollmentRepository.findById(enrollment.getId()))
+                .hasValueSatisfying(e -> assertThat(e.isStarted()).isTrue());
     }
 
     private void moveToFutureByDays(int days) {

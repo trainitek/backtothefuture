@@ -31,8 +31,8 @@ trait IntegrationClockSupport {
     Instant instant() { Instant.now(clock) }
 
     def setup() {
-        // reset the Clock after each test
-        // in a real project we could create a Spring TestExecutionListener in order to do that
+        // reset the Clock before each test, in a real project we could create a Spring TestExecutionListener
+        // in order to do that, e.g. MutableClockTestExecutionListener
         clock.setInstant(Instant.now().atZone(ZoneId.of("UTC")).toInstant())
     }
 }
