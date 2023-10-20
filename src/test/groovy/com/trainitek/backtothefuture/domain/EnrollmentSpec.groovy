@@ -137,9 +137,9 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
     def "Started enrollment can't be completed if time was tampered with"() {
         given:
         setClockTo(date("2023-09-10"))
-        def enrolledAt = date("2023-09-10") + ofDays(1)
-        def availableFrom = enrolledAt
-        def startedAt = availableFrom
+        def startedAt = date("2023-09-11")
+        def enrolledAt = startedAt 
+        def availableFrom = startedAt 
         def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom, startedAt)
 
         when:
