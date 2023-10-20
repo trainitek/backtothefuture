@@ -1,6 +1,7 @@
 package com.trainitek.backtothefuture.application;
 
 import com.trainitek.backtothefuture.domain.EnrollmentRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,7 @@ public class CompleteEnrollmentHandler {
 
     public void complete(@NonNull UUID enrollmentId) {
         var enrollment = repository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment id=%s not found".formatted(enrollmentId)));
+                .orElseThrow(() -> new EntityNotFoundException("Enrollment id=%s not found".formatted(enrollmentId)));
         enrollment.completeAt(clock);
         repository.save(enrollment);
     }

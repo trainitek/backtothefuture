@@ -75,20 +75,6 @@ public class Enrollment extends UuidAggregateRoot {
         return new Enrollment(student, enroller, course, enrolledAt, availableFrom, null, null);
     }
 
-    public static Enrollment startedEnrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
-                                               @NonNull Instant enrolledAt, @NonNull Instant availableFrom,
-                                               @NonNull Instant startedAt) {
-        return new Enrollment(student, enroller, course, enrolledAt, availableFrom, startedAt, null);
-    }
-
-    public static Enrollment completedEnrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
-                                                 @NonNull Instant enrolledAt,
-                                                 @NonNull Instant availableFrom,
-                                                 @NonNull Instant startedAt,
-                                                 @NonNull Instant completedAt) {
-        return new Enrollment(student, enroller, course, enrolledAt, availableFrom, startedAt, completedAt);
-    }
-
     public void startAt(Clock clock) {
         var startedAt = Instant.now(clock);
         throwIfStartDateIsBeforeAvailableFrom(startedAt);

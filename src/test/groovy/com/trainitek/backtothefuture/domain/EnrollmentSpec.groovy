@@ -17,7 +17,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
     @Unroll
     def "Enrollment can be created"() {
         when:
-        Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        initialEnrollment(enrolledAt, availableFrom)
 
         then:
         noExceptionThrown()
@@ -32,7 +32,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
     @Unroll
     def "Enrollment can't be made available before enrollment date"() {
         when:
-        Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        initialEnrollment(enrolledAt, availableFrom)
 
         then:
         def e = thrown(IllegalArgumentException)
@@ -50,7 +50,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def availableFrom = enrolledAt
 
         when:
-        Enrollment enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        Enrollment enrollment = initialEnrollment(enrolledAt, availableFrom)
 
         then:
         !enrollment.isStarted()
@@ -60,7 +60,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         given:
         def enrolledAt = date("2023-09-10")
         def availableFrom = enrolledAt
-        Enrollment enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        Enrollment enrollment = initialEnrollment(enrolledAt, availableFrom)
 
         when:
         adjustClock { it + ofDays(1) }
@@ -76,7 +76,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         setClockTo(date("2023-09-10"))
         def enrolledAt = date("2023-09-10") + ofDays(1)
         def availableFrom = enrolledAt
-        def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        def enrollment = initialEnrollment(enrolledAt, availableFrom)
 
         when:
         enrollment.startAt(clock)
@@ -93,7 +93,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def enrolledAt = date("2023-09-10")
         def availableFrom = enrolledAt
         def startedAt = availableFrom
-        def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom, startedAt)
+        def enrollment = startedEnrollment(enrolledAt, availableFrom, startedAt)
 
         when:
         enrollment.completeAt(clock)
@@ -108,7 +108,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def enrolledAt = date("2023-09-10")
         def availableFrom = enrolledAt
         def startedAt = availableFrom
-        def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom, startedAt)
+        def enrollment = startedEnrollment(enrolledAt, availableFrom, startedAt)
         def zone = clock.getZone()
         def expectedValidUntilDate = date("2023-09-10").atZone(zone)
                 .plusMonths(Enrollment.COMPLETION_VALID_DURATION).toInstant()
@@ -120,27 +120,28 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         enrollment.completionValidUntil == expectedValidUntilDate
     }
 
-    def "Enrollment should complete only if it has started"() {
+    def "Enrollment can't complete if it hasn't started"() {
         given:
         setClockTo(date("2023-09-10"))
         def enrolledAt = date("2023-09-10")
         def availableFrom = enrolledAt
-        def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        def enrollment = initialEnrollment(enrolledAt, availableFrom)
 
         when:
         enrollment.completeAt(clock)
 
         then:
-        thrown(IllegalArgumentException)
+        def e = thrown(IllegalArgumentException)
+        e.message.contains("Cannot complete an enrollment that hasn't started.")
     }
 
     def "Started enrollment can't be completed if time was tampered with"() {
         given:
         setClockTo(date("2023-09-10"))
         def startedAt = date("2023-09-11")
-        def enrolledAt = startedAt 
-        def availableFrom = startedAt 
-        def enrollment = Enrollment.startedEnrollment(student, student, course, enrolledAt, availableFrom, startedAt)
+        def enrolledAt = startedAt
+        def availableFrom = startedAt
+        def enrollment = startedEnrollment(enrolledAt, availableFrom, startedAt)
 
         when:
         enrollment.completeAt(clock)
@@ -181,5 +182,26 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
 
     def date(String dateString) {
         return Instant.parse(dateString + "T00:10:00Z")
+    }
+
+    def startedEnrollment(Instant enrolledAt, Instant availableFrom, Instant startedAt) {
+        return Enrollment.builder()
+                .course(course)
+                .student(student)
+                .enroller(student)
+                .enrolledAt(enrolledAt)
+                .availableFrom(availableFrom)
+                .startedAt(startedAt)
+                .build()
+    }
+
+    def initialEnrollment(Instant enrolledAt, Instant availableFrom) {
+        return Enrollment.builder()
+                .course(course)
+                .student(student)
+                .enroller(student)
+                .enrolledAt(enrolledAt)
+                .availableFrom(availableFrom)
+                .build()
     }
 }
