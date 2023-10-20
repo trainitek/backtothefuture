@@ -1,6 +1,8 @@
 package com.trainitek.backtothefuture.domain;
 
 import com.trainitek.backtothefuture.domain.base.UuidAggregateRoot;
+import com.trainitek.backtothefuture.domain.events.EnrollmentCompleted;
+import com.trainitek.backtothefuture.domain.events.EnrollmentStarted;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import lombok.Builder;
@@ -11,6 +13,7 @@ import lombok.NonNull;
 import java.time.Clock;
 import java.time.Instant;
 
+import static com.trainitek.backtothefuture.domain.base.ClassBasedMetaData.metaData;
 import static lombok.AccessLevel.PROTECTED;
 
 @Entity
@@ -46,7 +49,7 @@ public class Enrollment extends UuidAggregateRoot {
     @Builder
     private Enrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
                        @NonNull Instant enrolledAt, @NonNull Instant availableFrom,
-                       Instant startedAt, Instant completedAt) {
+                       Instant startedAt, Instant completedAt, @NonNull Clock clock) {
         this.student = student;
         this.enroller = enroller;
         this.course = course;
@@ -60,39 +63,50 @@ public class Enrollment extends UuidAggregateRoot {
         }
         if (startedAt != null) {
             throwIfStartDateIsBeforeAvailableFrom(startedAt);
-            this.startedAt = startedAt;
+            doStartAt(startedAt, clock);
         }
         if (completedAt != null) {
             throwIfNotStarted();
             throwIfStartDateIsAfterCompletionDate(completedAt);
-            this.completedAt = completedAt;
+            doCompleteAt(completedAt, clock);
         }
     }
 
     public static Enrollment initialEnrollment(@NonNull User student, @NonNull User enroller, @NonNull Course course,
                                                @NonNull Instant enrolledAt,
-                                               @NonNull Instant availableFrom) {
-        return new Enrollment(student, enroller, course, enrolledAt, availableFrom, null, null);
+                                               @NonNull Instant availableFrom,
+                                               @NonNull Clock clock) {
+        return new Enrollment(student, enroller, course, enrolledAt, availableFrom, null, null,
+                clock);
     }
 
     public void startAt(Clock clock) {
         var startedAt = Instant.now(clock);
         throwIfStartDateIsBeforeAvailableFrom(startedAt);
+        doStartAt(startedAt, clock);
+    }
+
+    private void doStartAt(@NonNull Instant startedAt, @NonNull Clock clock) {
         this.startedAt = startedAt;
+        addEvent(new EnrollmentStarted(getId(), startedAt, metaData(EnrollmentStarted.class, clock)));
     }
 
     public void completeAt(Clock completedAt) {
         throwIfNotStarted();
         var completedAtDateTime = Instant.now(completedAt);
         throwIfStartDateIsAfterCompletionDate(completedAtDateTime);
-        this.completedAt = completedAtDateTime;
-        this.completionValidUntil = calculateValidUntilDate(completedAt);
+        doCompleteAt(completedAtDateTime, completedAt);
     }
 
-    private Instant calculateValidUntilDate(Clock completedAt) {
-        var zone = completedAt.getZone();
-        return completedAt.instant()
-                .atZone(zone)
+    private void doCompleteAt(@NonNull Instant completedAt, @NonNull Clock clock) {
+        this.completedAt = completedAt;
+        this.completionValidUntil = calculateValidUntilDate(completedAt, clock);
+        addEvent(new EnrollmentCompleted(getId(), completedAt, metaData(EnrollmentCompleted.class, clock)));
+    }
+
+    private Instant calculateValidUntilDate(@NonNull Instant completedAt, @NonNull Clock clock) {
+        return completedAt
+                .atZone(clock.getZone())
                 .plusMonths(COMPLETION_VALID_DURATION)
                 .toInstant();
     }

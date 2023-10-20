@@ -11,9 +11,6 @@ import static java.time.Duration.ofDays
 
 class EnrollmentSpec extends Specification implements UnitClockSupport {
 
-    User student = Fixtures.someStudent()
-    Course course = Fixtures.someCourse()
-
     @Unroll
     def "Enrollment can be created"() {
         when:
@@ -158,7 +155,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         setClockTo(date("2023-09-10"))
         def enrolledAt = date("2023-09-10")
         def availableFrom = enrolledAt + ofDays(14)
-        def enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom)
+        def enrollment = initialEnrollment(enrolledAt, availableFrom)
 
         when: 'time passes'
         adjustClock { it + ofDays(30) }
@@ -185,23 +182,10 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
     }
 
     def startedEnrollment(Instant enrolledAt, Instant availableFrom, Instant startedAt) {
-        return Enrollment.builder()
-                .course(course)
-                .student(student)
-                .enroller(student)
-                .enrolledAt(enrolledAt)
-                .availableFrom(availableFrom)
-                .startedAt(startedAt)
-                .build()
+        return Fixtures.someStartedEnrollment(enrolledAt, availableFrom, startedAt, clock)
     }
 
     def initialEnrollment(Instant enrolledAt, Instant availableFrom) {
-        return Enrollment.builder()
-                .course(course)
-                .student(student)
-                .enroller(student)
-                .enrolledAt(enrolledAt)
-                .availableFrom(availableFrom)
-                .build()
+        return Fixtures.someInitialEnrollment(enrolledAt, availableFrom, clock)
     }
 }

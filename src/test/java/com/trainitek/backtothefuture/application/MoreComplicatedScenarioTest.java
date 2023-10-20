@@ -1,11 +1,13 @@
 package com.trainitek.backtothefuture.application;
 
+import com.trainitek.backtothefuture.config.MutableClockTestExecutionListener;
 import com.trainitek.backtothefuture.domain.*;
 import com.trainitek.backtothefuture.test.fixtures.Fixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestExecutionListeners;
 import spock.util.time.MutableClock;
 
 import java.time.Instant;
@@ -15,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
+@TestExecutionListeners(mergeMode =
+        TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS, listeners = MutableClockTestExecutionListener.class)
 class MoreComplicatedScenarioTest {
 
     @Autowired
@@ -34,7 +38,9 @@ class MoreComplicatedScenarioTest {
 
     @Autowired
     MutableClock clock;
+
     private User student;
+
     private Course course;
 
     @BeforeEach
@@ -52,7 +58,7 @@ class MoreComplicatedScenarioTest {
         var today = date("2023-09-11");
         clock.setInstant(today);
         var tomorrow = date("2023-09-12");
-        var enrollment = Enrollment.initialEnrollment(student, student, course, today, tomorrow);
+        var enrollment = initialEnrollment(today, tomorrow);
         enrollmentRepository.save(enrollment);
 
         // when
@@ -81,6 +87,14 @@ class MoreComplicatedScenarioTest {
 
         // then
         assertThatEnrollmentIsCompleted(enrollment);
+    }
+
+    private Enrollment initialEnrollment(Instant enrolledAt, Instant availableFrom) {
+        return Fixtures.initialEnrollment(enrolledAt, availableFrom, clock)
+                .student(student)
+                .enroller(student)
+                .course(course)
+                .build();
     }
 
     private void assertThatEnrollmentIsCompleted(Enrollment enrollment) {

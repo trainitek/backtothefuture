@@ -55,7 +55,7 @@ class StartEnrollmentHandlerTest {
         var enrolledAt = date("2023-09-10");
         clock.setInstant(enrolledAt);
         var availableFrom = enrolledAt.plus(ofDays(1));
-        var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
+        var enrollment = initialEnrollment(enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
 
         // when & then
@@ -69,7 +69,7 @@ class StartEnrollmentHandlerTest {
         var enrolledAt = date("2023-09-11");
         clock.setInstant(enrolledAt);
         var availableFrom = enrolledAt.plus(ofDays(1));
-        var enrollment = Enrollment.initialEnrollment(student, student, course, enrolledAt, availableFrom);
+        var enrollment = initialEnrollment(enrolledAt, availableFrom);
         enrollmentRepository.save(enrollment);
 
         // when
@@ -79,6 +79,14 @@ class StartEnrollmentHandlerTest {
         // then
         assertThat(enrollmentRepository.findById(enrollment.getId()))
                 .hasValueSatisfying(e -> assertThat(e.isStarted()).isTrue());
+    }
+
+    private Enrollment initialEnrollment(Instant enrolledAt, Instant availableFrom) {
+        return Fixtures.initialEnrollment(enrolledAt, availableFrom, clock)
+                .student(student)
+                .enroller(student)
+                .course(course)
+                .build();
     }
 
     private void moveToFutureBy(Duration amount) {
