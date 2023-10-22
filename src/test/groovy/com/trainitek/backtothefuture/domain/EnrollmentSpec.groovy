@@ -56,6 +56,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
     def "Enrollment can be started"() {
         given:
         def enrolledAt = date("2023-09-10")
+        setClockTo(enrolledAt)
         def availableFrom = enrolledAt
         Enrollment enrollment = initialEnrollment(enrolledAt, availableFrom)
 

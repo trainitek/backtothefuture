@@ -67,7 +67,7 @@ public class Enrollment extends UuidAggregateRoot {
         }
         if (completedAt != null) {
             throwIfNotStarted();
-            throwIfStartDateIsAfterCompletionDate(completedAt);
+            throwIfCompletionDateIfBeforeStartedDate(completedAt);
             doCompleteAt(completedAt, clock);
         }
     }
@@ -86,6 +86,21 @@ public class Enrollment extends UuidAggregateRoot {
         doStartAt(startedAt, clock);
     }
 
+    /**
+     * Bad impl, uncomment if you want to play around with arch unit.
+     */
+    public void start() {
+//        var startedAt = Instant.now();
+//        if (startedAt.isBefore(this.availableFrom)) {
+//            throw new IllegalArgumentException(
+//                    "Cannot start the enrollment. Current date %s is before available date %s."
+//                            .formatted(startedAt, this.availableFrom)
+//            );
+//        }
+//        this.startedAt = startedAt;
+        // publish events
+    }
+
     private void doStartAt(@NonNull Instant startedAt, @NonNull Clock clock) {
         this.startedAt = startedAt;
         addEvent(new EnrollmentStarted(getId(), startedAt, metaData(EnrollmentStarted.class, clock)));
@@ -94,7 +109,7 @@ public class Enrollment extends UuidAggregateRoot {
     public void completeAt(Clock completedAt) {
         throwIfNotStarted();
         var completedAtDateTime = Instant.now(completedAt);
-        throwIfStartDateIsAfterCompletionDate(completedAtDateTime);
+        throwIfCompletionDateIfBeforeStartedDate(completedAtDateTime);
         doCompleteAt(completedAtDateTime, completedAt);
     }
 
@@ -126,11 +141,11 @@ public class Enrollment extends UuidAggregateRoot {
         }
     }
 
-    private void throwIfStartDateIsAfterCompletionDate(Instant completedAt) {
-        if (this.startedAt.isAfter(completedAt)) {
+    private void throwIfCompletionDateIfBeforeStartedDate(Instant completedAt) {
+        if (!completedAt.isAfter(this.startedAt)) {
             throw new IllegalArgumentException(
-                    "Cannot complete the enrollment. Started at date %s is after current date (completion date) %s."
-                            .formatted(this.startedAt, completedAt)
+                    "Cannot complete the enrollment. Completion date %s is not after started date %s."
+                            .formatted(completedAt, this.startedAt)
             );
         }
     }

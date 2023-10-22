@@ -1,13 +1,16 @@
 package com.trainitek.backtothefuture.test.support
 
+import com.trainitek.backtothefuture.config.MutableClockTestExecutionListener
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.TestExecutionListeners
 import spock.util.time.MutableClock
 
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 
+@TestExecutionListeners(mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS,
+        listeners = MutableClockTestExecutionListener)
 trait IntegrationClockSupport {
     @Autowired
     MutableClock clock
@@ -29,10 +32,4 @@ trait IntegrationClockSupport {
     LocalDate localDate() { LocalDate.now(clock) }
 
     Instant instant() { Instant.now(clock) }
-
-    def setup() {
-        // reset the Clock before each test, in a real project we could create a Spring TestExecutionListener
-        // in order to do that, e.g. MutableClockTestExecutionListener
-        clock.setInstant(Instant.now().atZone(ZoneId.of("UTC")).toInstant())
-    }
 }
