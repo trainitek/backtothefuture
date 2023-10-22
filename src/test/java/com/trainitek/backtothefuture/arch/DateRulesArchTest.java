@@ -13,7 +13,9 @@ import java.util.Date;
  * Uncomment code in {@link com.trainitek.backtothefuture.HowDoWeCreateDates#main(String[])} to see this test in action.
  */
 public class DateRulesArchTest {
-    JavaClasses prodClasses = new ClassFileImporter().withImportOption(new DoNotIncludeTests()).importPackages("com.trainitek");
+    JavaClasses prodClasses = new ClassFileImporter()
+            .withImportOption(new DoNotIncludeTests())
+            .importPackages("com.trainitek");
 
     @Test
     void checkThatClockIsUsedToCreateDateInProdCode() {
