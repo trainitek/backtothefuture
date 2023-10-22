@@ -8,6 +8,7 @@ import spock.lang.Unroll
 import java.time.Instant
 
 import static java.time.Duration.ofDays
+import static java.time.Duration.ofHours
 
 class EnrollmentSpec extends Specification implements UnitClockSupport {
 
@@ -94,6 +95,7 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def enrollment = startedEnrollment(enrolledAt, availableFrom, startedAt)
 
         when:
+        adjustClock { it + ofHours(1) }
         enrollment.completeAt(clock)
 
         then:
@@ -108,13 +110,14 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         def startedAt = availableFrom
         def enrollment = startedEnrollment(enrolledAt, availableFrom, startedAt)
         def zone = clock.getZone()
-        def expectedValidUntilDate = date("2023-09-10").atZone(zone)
-                .plusMonths(Enrollment.COMPLETION_VALID_DURATION).toInstant()
 
         when:
+        adjustClock { it + ofHours(1) }
         enrollment.completeAt(clock)
 
         then:
+        def expectedValidUntilDate = (date("2023-09-10") + ofHours(1)).atZone(zone)
+                .plusMonths(Enrollment.COMPLETION_VALID_DURATION).toInstant()
         enrollment.completionValidUntil == expectedValidUntilDate
     }
 
@@ -147,8 +150,9 @@ class EnrollmentSpec extends Specification implements UnitClockSupport {
         then:
         def e = thrown(IllegalArgumentException)
         def expectedCompletedAt = date("2023-09-10")
-        e.message == "Cannot complete the enrollment. Started at date ${startedAt} is after current date " +
-                "(completion date) ${expectedCompletedAt}."
+
+        e.message == "Cannot complete the enrollment. Completion date ${expectedCompletedAt} " +
+                "is not after started date ${startedAt}."
     }
 
     def "Enrollment can be created, started and then completed during a longer period"() {
