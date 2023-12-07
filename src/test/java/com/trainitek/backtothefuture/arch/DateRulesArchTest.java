@@ -29,6 +29,9 @@ public class DateRulesArchTest {
                 .orShould().callMethod(OffsetDateTime.class, "now")
                 .orShould().callMethod(OffsetDateTime.class, "now", ZoneId.class)
                 .orShould().callMethod(Instant.class, "now")
+                .orShould().callMethod(Clock.class, "fixed", Instant.class, ZoneId.class)
+                .orShould().callMethod(Clock.class, "system", ZoneId.class)
+                .orShould().callMethod(Clock.class, "systemDefaultZone")
                 .orShould().callConstructor(Date.class)
                 .because("In prod code we should ALWAYS use Clock to create dates (Our rules in HERE_LIK_TO_WIKI )")
                 .check(prodClasses);
